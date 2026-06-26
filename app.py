@@ -4,6 +4,7 @@ import numpy as np
 import joblib
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import os
 
 # ==============================================================================
 # 1. PAGE SETUP & HIGH-END VIEWPORT ARCHITECTURE
@@ -121,19 +122,27 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# 2. DATASET & MACHINE LEARNING MODEL INGESTION
+# 2. DATASET & MACHINE LEARNING MODEL INGESTION (ABSOLUTE ROUTING FIX)
 # ==============================================================================
 @st.cache_resource
 def load_analytics_pipeline():
-    model = joblib.load('best_profit_model.pkl')
-    preprocessor = joblib.load('preprocessor.pkl')
-    raw_data = pd.read_csv("dataset/SkyCity_Restaurants_Cleaned.csv")
+    # Detect running environment root dynamically
+    base_path = os.path.dirname(os.path.abspath(__file__)) if '__file__' in locals() else os.getcwd()
+    
+    model_path = os.path.join(base_path, 'best_profit_model.pkl')
+    preprocessor_path = os.path.join(base_path, 'preprocessor.pkl')
+    data_path = os.path.join(base_path, 'dataset', 'SkyCity_Restaurants_Cleaned.csv')
+    
+    model = joblib.load(model_path)
+    preprocessor = joblib.load(preprocessor_path)
+    raw_data = pd.read_csv(data_path)
     return model, preprocessor, raw_data
 
 try:
     model, preprocessor, df = load_analytics_pipeline()
 except Exception as e:
-    st.error("Pipeline assets missing. Execute 'model_pipeline.py' inside your core workspace framework first.")
+    st.error(f"Pipeline assets missing. Environment root execution error: {e}")
+    st.info("Ensure best_profit_model.pkl, preprocessor.pkl, and dataset/ folder are committed directly to your repository's root layout.")
     st.stop()
 
 # ==============================================================================
